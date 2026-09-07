@@ -1,8 +1,19 @@
+// 导入数据接口
+import { fetchProductType } from "../api/api"
+
+
 @Entry
   // 自定义组件 -- MenuPage
 @Component
   // export default  以默认导出的方式 导出组件
 export default struct MenuPage {
+
+  // 生命周期函数 -- 页面初始化完成
+  aboutToAppear(): void {
+    // 获取商品类型
+     this.getProductType();
+  }
+
   build() {
     Column() {
 
@@ -42,5 +53,13 @@ export default struct MenuPage {
 
     }
 
+  }
+
+  // 获取商品类型
+  private getProductType() {
+    fetchProductType()
+      .then(res=>{
+        console.log(JSON.stringify(res.result))
+      })
   }
 }

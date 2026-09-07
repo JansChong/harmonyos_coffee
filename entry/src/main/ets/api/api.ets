@@ -20,10 +20,15 @@ let fetchHomeProductList = (): Promise<http.HttpResponse>=>{
 }
 
 
+// 拉取商品分类
+let fetchProductType = (): Promise<http.HttpResponse>=>{
+  return ajax("/type", "GET")
+}
 
 
 // 导出数据接口
 export {
   fetchBanner,  // 拉取轮播图的接口
-  fetchHomeProductList // 拉取商品列表
+  fetchHomeProductList, // 拉取商品列表
+  fetchProductType // 拉取商品分类
 }
