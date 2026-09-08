@@ -33,3 +33,17 @@ export interface home_product_item_t {
     typeDesc: string;
     updatedAt: string;
 }
+
+
+export interface side_menu_t {
+    code: number;
+    result: side_menu_item_t[];
+}
+
+export interface side_menu_item_t {
+    createdAt: string;
+    id: number;
+    type: string;
+    typeDesc: string;
+    updatedAt: string;
+}

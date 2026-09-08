@@ -14,9 +14,11 @@ export default struct CommodityCard {
       Image(this.product_data.smallImg)
         .margin({bottom: 20})
         .width("100%")
-        .height(160)
+        // .height(160)
       Text(this.product_data.name)
         .fontSize(18)
+        .maxLines(1) // 最大显示1行文本
+        .textOverflow({overflow:TextOverflow.Ellipsis}) // 溢出：显示省略号
       Text(this.product_data.enname)
         .fontColor($r("app.color.unselected_font_color"))
         .margin({top:2, bottom:3})
