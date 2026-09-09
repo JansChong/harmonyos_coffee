@@ -72,7 +72,7 @@ struct Index {
           // 页签所在的位置
           barPosition: BarPosition.End,
           // 当前显示的页面的索引
-          index: 0
+          index: $$this.selectedIndex
       }){
         // 根据数组长度 生成内容, 语法: ForEach(数组, (数组项, 下标)=>{ } )
         ForEach(this.tabBarData, (item: tabBarItem_t, index: number) => {

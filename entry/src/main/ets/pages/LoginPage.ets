@@ -1,23 +1,256 @@
+// 输入框 自定义构建函数 所需要接收的参数类型
+import { input_field_t } from "../model/other_t"
+
+import { validatePassword, validatePhone } from "../utils/validForm";
+
+
 @Entry
 @Component
 struct LoginPage {
-  @State message: string = 'Hello World';
+
+  @State phoneNumber: string = '';  // 手机号
+  @State password: string = ''; // 密码
+  @State isPasswordVisible: boolean = false;  // 密码是否可见
+  @State phoneError: string = ''; // 手机错误提示
+  @State passwordError: string = ''; // 密码错误提示
+  @State isPhoneValid: boolean = true; // 手机号是否通过验证
+  @State isPasswordValid: boolean = true; // 密码是否通过验证
+  @State hasValidated: boolean = false; // 是否需要验证表单
+
+  // 点击登录：触发校验
+  private onLogin(): void {
+    this.hasValidated = true; // 需要表单验证  -- 给输入框的onChange使用的
+
+    // 点击登录按钮再验证一次
+    this.isPhoneValid = validatePhone(this.phoneNumber);
+    this.isPasswordValid = validatePassword(this.password);
+    this.phoneError = this.isPhoneValid ? '' : '请输入正确的 11 位手机号';
+    this.passwordError = this.isPasswordValid ? '' : '密码需含字母、数字、符号三种且长度大于 6 位';
+
+    // 如果手机号和密码验证通过
+    if (this.isPhoneValid && this.isPasswordValid) {
+      // 显示Dialog
+      AlertDialog.show({
+        title: '登录',
+        message: '校验通过，执行登录请求',
+        confirm: {
+          value: '确定',
+          action: () => {}
+        }
+      });
+    }
+  }
 
   build() {
-    RelativeContainer() {
-      Text(this.message)
-        .id('LoginPageHelloWorld')
-        .fontSize($r('app.float.page_text_font_size'))
-        .fontWeight(FontWeight.Bold)
-        .alignRules({
-          center: { anchor: '__container__', align: VerticalAlign.Center },
-          middle: { anchor: '__container__', align: HorizontalAlign.Center }
-        })
-        .onClick(() => {
-          this.message = 'Welcome';
-        })
+    Column() {
+      // 顶部导航栏：Logo（粉色盒子）+ 首页
+      this.TopBar();
+
+      // 欢迎标题
+      this.WelcomeHeader();
+
+      // 表单区域
+      this.FormArea();
+
+      // 弹性占位，将按钮推到底部
+      Blank();
+
+      // 底部按钮
+      this.BottomButtons();
     }
-    .height('100%')
     .width('100%')
+    .height('100%')
+    .backgroundColor('#FFFFFF');
+  }
+
+  // ================= 自定义构建函数（可复用） =================
+
+  // 顶部导航栏
+  @Builder
+  TopBar() {
+    Row() {
+      Row() {
+        // 粉色纯色盒子替代 Logo 图片
+        Image($r("app.media.home_active"))
+          .width(32)
+          .height(32)
+          .borderRadius(16);
+
+        Text('Luckin Coffee')
+          .fontSize(15)
+          .fontWeight(FontWeight.Bold)
+          .fontColor('#333333')
+          .margin({ left: 8 });
+      }
+
+      Blank();
+
+      Text('首页')
+        .fontSize(14)
+        .fontColor($r("app.color.theme_color"))
+        .onClick(() => {
+          // 返回首页
+        });
+    }
+    .width('100%')
+    .alignItems(VerticalAlign.Center)
+    .padding({ left: 20, right: 20, top: 16, bottom: 16 })
+    .margin({bottom: 60});
+  }
+
+  // 欢迎标题
+  @Builder
+  WelcomeHeader() {
+    Column() {
+      Text('欢迎回来！')
+        .fontSize(32)
+        .fontColor('#534944');
+
+      Text('Please login to your accounts')
+        .fontSize(18)
+        .fontColor('#999999')
+        .margin({ top: 8 });
+    }
+    .alignItems(HorizontalAlign.Start)
+    .width('100%')
+    .padding({ left: 20, right: 20, top: 32, bottom: 32 })
+    .margin({bottom: 30});
+  }
+
+  // 表单区域
+  @Builder
+  FormArea() {
+    Column() {
+      // 手机号输入框（复用自定义构建函数）
+      this.InputField({
+        label: '手机号',
+        placeholder: '手机号',
+        type: InputType.PhoneNumber,
+        isValid: this.isPhoneValid,
+        error: this.phoneError,
+        onChange: (value: string) => {
+          this.phoneNumber = value;
+          if (this.hasValidated) {
+            this.isPhoneValid = validatePhone(value);
+            this.phoneError = this.isPhoneValid ? '' : '请输入正确的 11 位手机号';
+          }
+        }
+      });
+
+      // 密码输入框（复用自定义构建函数，带显隐切换）
+      this.InputField({
+        label: '密码',
+        placeholder: '密码',
+        type: InputType.Password,
+        isValid: this.isPasswordValid,
+        error: this.passwordError,
+        onChange: (value: string) => {
+          this.password = value;
+          if (this.hasValidated) {
+            this.isPasswordValid = validatePassword(value);
+            this.passwordError = this.isPasswordValid ? '' : '密码需含字母、数字、符号三种且长度大于 6 位';
+          }
+        }
+
+      });
+
+      // 忘记密码
+      Row() {
+        Blank();
+        Text('忘记密码？')
+          .fontSize(13)
+          .fontColor('#999999')
+          .onClick(() => {
+            // 跳转找回密码
+          });
+      }
+      .width('100%')
+      .margin({ top: 12 });
+    }
+    .width('100%')
+    .padding({ left: 20, right: 20 });
+  }
+
+  // 可复用输入框构建函数（手机号 / 密码通用）
+  @Builder
+  InputField(params: input_field_t) {
+    Column() {
+      // 标签 + 输入框 + 显隐图标 同一行
+      Row() {
+        // 标签
+        Text(params.label)
+          .fontSize(16)
+          .fontColor('#333333')
+          .width(56)
+          .margin({right:40});
+
+        // 输入框（无边框）
+        TextInput({ placeholder: params.placeholder })
+          .layoutWeight(1)
+          .height(48)
+          .type(params.type)
+          .fontSize(14)
+          .fontColor('#333333')
+          .borderRadius(0)
+          .padding({ left: 4, right: 4 })
+          .backgroundColor(Color.Transparent)
+          .placeholderColor($r("app.color.unselected_font_color"))
+          .onChange((value: string) => {
+            params.onChange(value);
+          });
+      }
+      .width('100%')
+      .alignItems(VerticalAlign.Center)
+      // 浅色底部边框
+      .border({ width: { bottom: 1 }, color: { bottom: '#E5E5E5' } })
+      .padding({ bottom: 4 });
+
+      // 错误提示
+      if (!params.isValid && params.error.length > 0) {
+        Text(params.error)
+          .fontSize(12)
+          .fontColor('#FF4D4F')
+          .margin({ top: 4 });
+      }
+    }
+    .alignItems(HorizontalAlign.Start)
+    .margin({ bottom: 16 });
+  }
+
+  // 底部按钮
+  @Builder
+  BottomButtons() {
+    Column() {
+      // 登录按钮（主按钮）
+      Button('登录')
+        .width('100%')
+        .height(48)
+        .backgroundColor('#0052D9')
+        .fontColor('#FFFFFF')
+        .fontSize(16)
+        .fontWeight(FontWeight.Medium)
+        .borderRadius(24)
+        .margin({bottom: 50})
+        .onClick(() => {
+          this.onLogin();
+        });
+
+      // 注册按钮（次按钮）
+      Button('注册')
+        .width('100%')
+        .height(48)
+        .backgroundColor('#FFFFFF')
+        .fontColor('#333333')
+        .fontSize(16)
+        .fontWeight(FontWeight.Medium)
+        .borderRadius(24)
+        .border({ width: 1, color: '#E5E5E5' })
+        .margin({ top: 12 })
+        .onClick(() => {
+          // 跳转注册页
+        });
+    }
+    .width('100%')
+    .padding({ left: 20, right: 20, bottom: 32 });
   }
 }

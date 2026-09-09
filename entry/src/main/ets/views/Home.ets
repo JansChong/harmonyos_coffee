@@ -69,7 +69,7 @@ export default struct Home {
             })
           }
           .width("100%")
-          .height(268.36)
+          // .height(268.36)
           .backgroundColor($r("app.color.unselected_font_color"))
           .indicator(
             // 面板指示点静态方法
