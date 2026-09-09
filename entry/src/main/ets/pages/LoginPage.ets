@@ -1,12 +1,16 @@
 // 输入框 自定义构建函数 所需要接收的参数类型
-import { input_field_t } from "../model/other_t"
-
+import { input_field_t,RegistrationInfo } from "../model/other_t"
+import { registerAccount } from "../api/api";
 import { validateNickName, validatePassword, validatePhone } from "../utils/validForm";
+
+import { promptAction } from '@kit.ArkUI';
+
 
 
 @Entry
 @Component
 struct LoginPage {
+  @State isShowSheet:boolean = false;
 
   @State phoneNumber: string = '';  // 手机号
   @State password: string = ''; // 密码
@@ -50,6 +54,9 @@ struct LoginPage {
 
   // 点击模态框注册按钮: 触发校验
   private onRegister(): void {
+    console.log(`手机号${this.phoneNumber}
+    密码${this.password}
+    昵称${this.nickName}`)
     this.hasValidated = true; // 需要表单验证  -- 给输入框的onChange使用的
 
     // 点击登录按钮再验证一次
@@ -58,19 +65,49 @@ struct LoginPage {
     this.isNickNameValid = validateNickName(this.nickName);
     this.phoneError = this.isPhoneValid ? '' : this.phoneErrMsg;
     this.passwordError = this.isPasswordValid ? '' : this.passwordErrMsg;
-    this.passwordError = this.isNickNameValid ? '' : this.nickNameErrMsg;
+    this.nickNameError = this.isNickNameValid ? '' : this.nickNameErrMsg;
 
     // 如果手机号、密码和昵称验证通过
     if (this.isPhoneValid && this.isPasswordValid && this.isNickNameValid) {
+      // promptAction.openToast({
+      //    message: "吐司",
+      //   duration: 2000,
+      // })
       // 显示Dialog
-      AlertDialog.show({
-        title: '注册',
-        message: '校验通过，执行注册请求',
-        confirm: {
-          value: '确定',
-          action: () => {}
-        }
-      });
+      // AlertDialog.show({
+      //   title: '注册',
+      //   message: '校验通过，执行注册请求',
+      //   confirm: {
+      //     value: '确定',
+      //     action: () => {}
+      //   }
+      // });
+      let registrationInfo: RegistrationInfo = {
+        phone: this.phoneNumber,
+        nickName: this.nickName,
+        password: this.password
+      }
+      registerAccount(registrationInfo)
+        .then(res =>{
+          console.log("注册结果 =>", JSON.stringify(res.result))
+          // 不管结果如何 显示吐司
+          promptAction.openToast({message: Object(res.result).msg})
+
+          // 注册成功 状态码 100
+          if(Object(res.result).code == 100){
+              // 关闭半模态框
+              this.hasValidated = false;
+              this.phoneError = '';
+              this.passwordError =  '';
+              this.nickNameError =  '';
+
+              // 清空密码和昵称 手机号可以保留
+              this.password = "";
+              this.nickName = "";
+
+              this.isShowSheet = false;
+          }
+        })
     }
   }
 
@@ -157,6 +194,7 @@ struct LoginPage {
       // 手机号输入框（复用自定义构建函数）
       this.InputField({
         label: '手机号',
+        text: this.phoneNumber,
         placeholder: '手机号',
         type: InputType.PhoneNumber,
         isValid: this.isPhoneValid,
@@ -218,7 +256,7 @@ struct LoginPage {
           .margin({right:40});
 
         // 输入框（无边框）
-        TextInput({ placeholder: params.placeholder })
+        TextInput({ text: params.text, placeholder: params.placeholder })
           .layoutWeight(1)
           .height(48)
           .type(params.type)
@@ -279,10 +317,30 @@ struct LoginPage {
         .borderRadius(24)
         .border({ width: 1, color: '#E5E5E5' })
         .margin({ top: 12 })
+        .onClick(()=>{
+          this.hasValidated = false; //
+          this.phoneError = '';
+          this.passwordError =  '';
+
+          this.isShowSheet = true; // 显示模态框
+        })
         // .绑定半模态页面(是否显示， 自定义构建函数,  其他配置)
-        .bindSheet(true, this.SheetBuilder(), {
+        .bindSheet($$this.isShowSheet, this.SheetBuilder(), {
           showClose: false,
-          height: "65%"
+          height: "65%",
+          onWillDismiss: (sheetAction: DismissSheetAction) => {
+            this.hasValidated = false;
+            this.phoneError = '';
+            this.passwordError =  '';
+            this.nickNameError =  '';
+
+            // 清空密码和昵称 手机号可以保留
+            this.password = "";
+            this.nickName = "";
+
+            // this.isShowSheet = false;
+            sheetAction.dismiss(); // 关闭模态框
+          }
         })
 
     }
@@ -299,9 +357,21 @@ struct LoginPage {
        Row(){
          Text("注册").fontSize(30)
          Text("X").fontSize(20).fontColor($r("app.color.unselected_font_color"))
+           .onClick(()=>{
+             this.hasValidated = false; //
+             this.phoneError = '';
+             this.passwordError =  '';
+             this.nickNameError =  '';
+
+             // 清空密码和昵称 手机号可以保留
+             this.password = "";
+             this.nickName = "";
+
+             this.isShowSheet = false; // 隐藏模态框
+           })
        }
        .width("100%")
-       .margin({bottom:30})
+       .margin({bottom:45})
        .justifyContent(FlexAlign.SpaceBetween)
 
 
@@ -310,6 +380,7 @@ struct LoginPage {
          // 手机号码输入框
          this.InputField({
            label: "手机号",
+           text: this.phoneNumber,
            placeholder: "手机号",
            type: InputType.PhoneNumber,
            isValid: this.isPhoneValid,
@@ -357,10 +428,10 @@ struct LoginPage {
          })
 
        }
-       .padding({ left:15, right:15, top:20, bottom:50 })
+       .padding({ left:15, right:15,  bottom:35 })
 
 
-       // 底部注册按钮
+       // 注册按钮
        Button('注册')
          .width('100%')
          .height(48)

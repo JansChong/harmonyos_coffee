@@ -9,6 +9,29 @@ const BASEURL:string = "https://kf.webxyq.com";
 // 请求 appkey
 const APPKEY:string = "U2FsdGVkX19WSQ59Cg+Fj9jNZPxRC5y0xB1iV06BeNA=";
 
+
+/**
+ * 手动将对象转换为 URL 查询字符串
+ * @param obj 待转换的对象
+ * @returns 格式化的查询字符串
+ */
+function objectToQueryStringManual(obj: object): string {
+  if (!obj || typeof obj !== 'object') return '';
+
+  // Object.entries(obj) 把对象， 按 键和值， 整理成二维数组 [ [key, value], [key, value] ]
+  return Object.entries(obj)
+    // 过滤空属性, 修改原数组
+    .filter( (fitem:string[] ) => fitem[1] !== null && fitem[1] !== undefined) // 过滤空值
+    // 映射， 把 [key, value] 映射成 "key=vlaue", 修改原数组
+    .map( (mitem:string[] ) => {
+      // 手动拼接，必须使用 encodeURIComponent 对键和值进行编码，否则特殊字符会导致参数解析失败。
+      const encodedKey = encodeURIComponent(mitem[0]);
+      const encodedValue = encodeURIComponent(String(mitem[1]));
+      return `${encodedKey}=${encodedValue}`;
+    })
+    // 用 & 连接查询串
+    .join('&');
+}
 /**
  * 封装网络请求
  * @param url 请求地址,  比如 /banner
@@ -16,7 +39,7 @@ const APPKEY:string = "U2FsdGVkX19WSQ59Cg+Fj9jNZPxRC5y0xB1iV06BeNA=";
  * @param params 请求参数
  * @returns Promise<ResponseType>
  */
-let request = (url: string, method: string = "GET", params: object = Object({})): Promise<http.HttpResponse> =>{
+let request = (url: string, method: string = "GET", params: (object|string) = Object({})): Promise<http.HttpResponse> =>{
   //  创建请求实例
   let httpRequest = http.createHttp();
   // 构建请求方式
@@ -24,6 +47,13 @@ let request = (url: string, method: string = "GET", params: object = Object({}))
 
   // 给参数params添加一个appkey属性, 所有接口都需要
   Object(params).appkey = APPKEY;
+  console.log("注册信息1 =>", JSON.stringify(params)); // {a:1, b:2, c:3}
+
+  // post 请求， 把请求参数 分割成查询串 参数1=值1&参数2=值2&...
+  if(method == "POST"){
+     params = objectToQueryStringManual(Object(params));
+     console.log("注册信息2 =>", JSON.stringify(params)); // {a:1, b:2, c:3}
+  }
 
   //  用实例发起网络请求
    return httpRequest.request(BASEURL + url, {
