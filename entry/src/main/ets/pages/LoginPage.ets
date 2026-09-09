@@ -60,7 +60,6 @@ struct LoginPage {
     this.passwordError = this.isPasswordValid ? '' : this.passwordErrMsg;
     this.passwordError = this.isNickNameValid ? '' : this.nickNameErrMsg;
 
-
     // 如果手机号、密码和昵称验证通过
     if (this.isPhoneValid && this.isPasswordValid && this.isNickNameValid) {
       // 显示Dialog
