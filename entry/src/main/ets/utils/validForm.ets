@@ -23,3 +23,17 @@ export function validatePassword(pwd: string): boolean {
   if (hasSymbol) typeCount++;
   return typeCount >= 3;
 }
+
+
+// 校验昵称：昵称至少有两个字符，不可以有空格
+export function validateNickName(nickname: string): boolean {
+  // 昵称至少有两个字符
+  if(nickname.length < 2){
+    return false;
+  }
+  // 昵称不可以包含空格字符
+  return !/\s/g.test(nickname);
+  // \s是一个元字符，用于匹配任意空白字符，包括空格、制表符、换行符等。
+  // \S的含义与\s相反，它匹配任意非空白字符。
+  // RegExp.test( 文本 )
+}

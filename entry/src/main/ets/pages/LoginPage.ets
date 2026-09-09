@@ -1,7 +1,7 @@
 // 输入框 自定义构建函数 所需要接收的参数类型
 import { input_field_t } from "../model/other_t"
 
-import { validatePassword, validatePhone } from "../utils/validForm";
+import { validateNickName, validatePassword, validatePhone } from "../utils/validForm";
 
 
 @Entry
@@ -10,12 +10,19 @@ struct LoginPage {
 
   @State phoneNumber: string = '';  // 手机号
   @State password: string = ''; // 密码
+  @State nickName: string = ''; // 昵称
   @State isPasswordVisible: boolean = false;  // 密码是否可见
   @State phoneError: string = ''; // 手机错误提示
   @State passwordError: string = ''; // 密码错误提示
+  @State nickNameError: string = ''; // 昵称错误提示
   @State isPhoneValid: boolean = true; // 手机号是否通过验证
   @State isPasswordValid: boolean = true; // 密码是否通过验证
+  @State isNickNameValid: boolean = true; // 昵称是否通过验证
   @State hasValidated: boolean = false; // 是否需要验证表单
+
+  phoneErrMsg:string = "请输入正确的 11 位手机号";
+  passwordErrMsg:string = "密码需含字母、数字、符号三种且长度大于 6 位";
+  nickNameErrMsg:string = "昵称至少有两个字符，不可以有空格";
 
   // 点击登录：触发校验
   private onLogin(): void {
@@ -24,8 +31,8 @@ struct LoginPage {
     // 点击登录按钮再验证一次
     this.isPhoneValid = validatePhone(this.phoneNumber);
     this.isPasswordValid = validatePassword(this.password);
-    this.phoneError = this.isPhoneValid ? '' : '请输入正确的 11 位手机号';
-    this.passwordError = this.isPasswordValid ? '' : '密码需含字母、数字、符号三种且长度大于 6 位';
+    this.phoneError = this.isPhoneValid ? '' : this.phoneErrMsg;
+    this.passwordError = this.isPasswordValid ? '' : this.passwordErrMsg;
 
     // 如果手机号和密码验证通过
     if (this.isPhoneValid && this.isPasswordValid) {
@@ -33,6 +40,33 @@ struct LoginPage {
       AlertDialog.show({
         title: '登录',
         message: '校验通过，执行登录请求',
+        confirm: {
+          value: '确定',
+          action: () => {}
+        }
+      });
+    }
+  }
+
+  // 点击模态框注册按钮: 触发校验
+  private onRegister(): void {
+    this.hasValidated = true; // 需要表单验证  -- 给输入框的onChange使用的
+
+    // 点击登录按钮再验证一次
+    this.isPhoneValid = validatePhone(this.phoneNumber);
+    this.isPasswordValid = validatePassword(this.password);
+    this.isNickNameValid = validateNickName(this.nickName);
+    this.phoneError = this.isPhoneValid ? '' : this.phoneErrMsg;
+    this.passwordError = this.isPasswordValid ? '' : this.passwordErrMsg;
+    this.passwordError = this.isNickNameValid ? '' : this.nickNameErrMsg;
+
+
+    // 如果手机号、密码和昵称验证通过
+    if (this.isPhoneValid && this.isPasswordValid && this.isNickNameValid) {
+      // 显示Dialog
+      AlertDialog.show({
+        title: '注册',
+        message: '校验通过，执行注册请求',
         confirm: {
           value: '确定',
           action: () => {}
@@ -132,7 +166,7 @@ struct LoginPage {
           this.phoneNumber = value;
           if (this.hasValidated) {
             this.isPhoneValid = validatePhone(value);
-            this.phoneError = this.isPhoneValid ? '' : '请输入正确的 11 位手机号';
+            this.phoneError = this.isPhoneValid ? '' : this.phoneErrMsg;
           }
         }
       });
@@ -148,7 +182,7 @@ struct LoginPage {
           this.password = value;
           if (this.hasValidated) {
             this.isPasswordValid = validatePassword(value);
-            this.passwordError = this.isPasswordValid ? '' : '密码需含字母、数字、符号三种且长度大于 6 位';
+            this.passwordError = this.isPasswordValid ? '' : this.passwordErrMsg;
           }
         }
 
@@ -246,11 +280,103 @@ struct LoginPage {
         .borderRadius(24)
         .border({ width: 1, color: '#E5E5E5' })
         .margin({ top: 12 })
-        .onClick(() => {
-          // 跳转注册页
-        });
+        // .绑定半模态页面(是否显示， 自定义构建函数,  其他配置)
+        .bindSheet(true, this.SheetBuilder(), {
+          showClose: false,
+          height: "65%"
+        })
+
     }
     .width('100%')
     .padding({ left: 20, right: 20, bottom: 32 });
+  }
+
+  // 半模态转场
+  @Builder
+  SheetBuilder(){
+     Column(){
+
+       // 顶部标题
+       Row(){
+         Text("注册").fontSize(30)
+         Text("X").fontSize(20).fontColor($r("app.color.unselected_font_color"))
+       }
+       .width("100%")
+       .margin({bottom:30})
+       .justifyContent(FlexAlign.SpaceBetween)
+
+
+       // 中间表单
+       Column(){
+         // 手机号码输入框
+         this.InputField({
+           label: "手机号",
+           placeholder: "手机号",
+           type: InputType.PhoneNumber,
+           isValid: this.isPhoneValid,
+           error: this.phoneError,
+           onChange: (value: string) => {
+             this.phoneNumber = value;
+             if (this.hasValidated) {
+               this.isPhoneValid = validatePhone(value);
+               this.phoneError = this.isPhoneValid ? '' : '请输入正确的 11 位手机号';
+             }
+           }
+         })
+         // 密码输入框（复用自定义构建函数，带显隐切换）
+         this.InputField({
+           label: '密码',
+           placeholder: '密码',
+           type: InputType.Password,
+           isValid: this.isPasswordValid,
+           error: this.passwordError,
+           onChange: (value: string) => {
+             this.password = value;
+             if (this.hasValidated) {
+               this.isPasswordValid = validatePassword(value);
+               this.passwordError = this.isPasswordValid ? '' : this.passwordErrMsg;
+             }
+           }
+
+         });
+         // 昵称输入框
+         this.InputField({
+           label: "昵称",
+           placeholder: "请输入昵称",
+           type: InputType.Normal,
+           isValid: this.isNickNameValid,
+           error: this.nickNameError,
+           onChange: (value:string) =>{
+              // 昵称输入框的值，赋予状态变量
+                this.nickName = value;
+                // 如果点击注册以后， 验证不通过， 每一次输入都会进行昵称验证
+                if(this.hasValidated){
+                   this.isNickNameValid = validateNickName(value);
+                   this.nickNameError = this.isNickNameValid ? "" : this.nickNameErrMsg
+                }
+           }
+         })
+
+       }
+       .padding({ left:15, right:15, top:20, bottom:50 })
+
+
+       // 底部注册按钮
+       Button('注册')
+         .width('100%')
+         .height(48)
+         .backgroundColor('#0052D9')
+         .fontColor('#FFFFFF')
+         .fontSize(16)
+         .fontWeight(FontWeight.Medium)
+         .borderRadius(24)
+         .margin({bottom: 50})
+         .onClick(() => {
+           // TODO... 真正的注册函数
+           this.onRegister();
+         });
+
+
+     }.padding(20)
   }
 }
