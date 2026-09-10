@@ -9,29 +9,31 @@ const BASEURL:string = "https://kf.webxyq.com";
 // 请求 appkey
 const APPKEY:string = "U2FsdGVkX19WSQ59Cg+Fj9jNZPxRC5y0xB1iV06BeNA=";
 
-
 /**
  * 手动将对象转换为 URL 查询字符串
  * @param obj 待转换的对象
- * @returns 格式化的查询字符串
+ * @returns 格式化后的查询字符串
  */
-function objectToQueryStringManual(obj: object): string {
-  if (!obj || typeof obj !== 'object') return '';
+function objectToQueryStringManual(obj: object|string): string{
+  // {a:1, b:2, c:3} => "a=1&b=2&c=3"
 
-  // Object.entries(obj) 把对象， 按 键和值， 整理成二维数组 [ [key, value], [key, value] ]
+  // POST 没有参数, 就返回 "" 查询串
+  if(!obj || typeof obj !== 'object') return ""
+  // { a:1, b:2, c:3, d:"" } => [ ["a","1"], ["b","2"], ["c","3"], ["d",""] ]
   return Object.entries(obj)
-    // 过滤空属性, 修改原数组
-    .filter( (fitem:string[] ) => fitem[1] !== null && fitem[1] !== undefined) // 过滤空值
-    // 映射， 把 [key, value] 映射成 "key=vlaue", 修改原数组
-    .map( (mitem:string[] ) => {
-      // 手动拼接，必须使用 encodeURIComponent 对键和值进行编码，否则特殊字符会导致参数解析失败。
-      const encodedKey = encodeURIComponent(mitem[0]);
-      const encodedValue = encodeURIComponent(String(mitem[1]));
-      return `${encodedKey}=${encodedValue}`;
-    })
-    // 用 & 连接查询串
-    .join('&');
+    // 过滤    结果: [ ["a","1"], ["b","2"], ["c","3"] ]
+    .filter( ( f_item: string[] ) => f_item[1] != null && f_item[1] !=undefined && f_item[1]!="" )
+    // 映射    结果: [ "a=1", "b=2", "c=3" ]
+    .map( (m_item: string[])=>{
+      // 手动拼接 要使用 encodeURIComponent() 对键和值进行编码, 避免特殊字符参数解析失败
+      const encodeKey = encodeURIComponent(m_item[0]);
+      const encodeValue = encodeURIComponent(m_item[1]);
+      return `${encodeKey}=${encodeValue}`  // 映射: return的结果 替换 原数组项
+    } )
+    // 把数组连接成字符串   [ "a=1", "b=2", "c=3" ]
+    .join("&");   // "a=1&b=2&c=3"
 }
+
 /**
  * 封装网络请求
  * @param url 请求地址,  比如 /banner
@@ -47,12 +49,12 @@ let request = (url: string, method: string = "GET", params: (object|string) = Ob
 
   // 给参数params添加一个appkey属性, 所有接口都需要
   Object(params).appkey = APPKEY;
-  console.log("注册信息1 =>", JSON.stringify(params)); // {a:1, b:2, c:3}
 
-  // post 请求， 把请求参数 分割成查询串 参数1=值1&参数2=值2&...
+  // 如果是post请求
   if(method == "POST"){
-     params = objectToQueryStringManual(Object(params));
-     console.log("注册信息2 =>", JSON.stringify(params)); // {a:1, b:2, c:3}
+     // 把对象参数 转成 查询串字符串: 参数1=值1&参数2=值2&....
+    params = objectToQueryStringManual(params);
+    console.log("注册参数=>", params);
   }
 
   //  用实例发起网络请求

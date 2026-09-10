@@ -1,8 +1,13 @@
-// 输入框 自定义构建函数 所需要接收的参数类型
-import { input_field_t } from "../model/other_t"
+// 导入参数类型约束
+import { input_field_t, RegistrationInfo } from "../model/other_t"
+
+// 弹窗
+import { promptAction } from '@kit.ArkUI';
+
+// 导入注册接口
+import { registerAccount } from "../api/api";
 
 import { validateNickName, validatePassword, validatePhone } from "../utils/validForm";
-
 
 @Entry
 @Component
@@ -55,10 +60,10 @@ struct LoginPage {
 
   // 点击模态框注册按钮: 触发校验
   private onRegister(): void {
-    console.log(`注册：：
-    手机号码 = ${this.phoneNumber}
-    密码 = ${this.password}
-    昵称 = ${this.nickName}`)
+    // console.log(`注册：：
+    // 手机号码 = ${this.phoneNumber}
+    // 密码 = ${this.password}
+    // 昵称 = ${this.nickName}`)
 
     this.hasValidated = true; // 需要表单验证  -- 给输入框的onChange使用的
 
@@ -72,17 +77,42 @@ struct LoginPage {
 
     // 如果手机号、密码和昵称验证通过
     if (this.isPhoneValid && this.isPasswordValid && this.isNickNameValid) {
-      // 显示Dialog
-      AlertDialog.show({
-        title: '注册',
-        message: '校验通过，执行注册请求',
-        confirm: {
-          value: '确定',
-          action: () => {
-          }
-        }
-      });
+      // 构建注册参数
+      let registrationInfo: RegistrationInfo = {
+        phone: this.phoneNumber,
+        password: this.password,
+        nickName: this.nickName
+      }
+
+      // 调用注册接口
+       registerAccount(registrationInfo)
+         .then(res=>{
+           console.log("注册结果 =>", JSON.stringify(res.result));
+
+           // 显示注册信息  "注册成功"  "手机号已被注册"
+           promptAction.openToast({
+             message: Object(res.result).msg,
+             bottom: "40%"
+           })
+
+           // 注册成功 或者 已经注册
+           if(Object(res.result).code == 100 ){
+             // 数据初始化 -- 避免半模态页面的表单验证结果 传递到 外面
+             this.hasValidated = false;
+             this.phoneError = "";
+             this.passwordError = "";
+             this.nickNameError = "";
+
+             // 输入框输入的数据 也要初始化 （避免后续 输入框显示空值，但实际有值）
+             this.password = "";
+             this.nickName = "";
+
+             //关闭半模态页面
+             this.isShowSheet = false;
+           }
+         })
     }
+
   }
 
   build() {
@@ -292,7 +322,7 @@ struct LoginPage {
         });
 
       // 注册按钮（次按钮）
-      Button('外面注册按钮')
+      Button('注册')
         .width('100%')
         .height(48)
         .backgroundColor('#FFFFFF')

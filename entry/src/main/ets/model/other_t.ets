@@ -9,6 +9,9 @@ export interface input_field_t {
   onChange: (value: string) => void, // 输入框的值发生变化时 触发的方法
 }
 
+// 注册信息
 export interface RegistrationInfo {
-  phone: string, password: string, nickName: string
+  phone: string,
+  password: string,
+  nickName:string
 }
