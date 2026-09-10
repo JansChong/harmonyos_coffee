@@ -7,11 +7,11 @@ import { validateNickName, validatePassword, validatePhone } from "../utils/vali
 @Entry
 @Component
 struct LoginPage {
-
-  @State phoneNumber: string = '';  // 手机号
+  @State isShowSheet: boolean = false; // 是否显示半模态框
+  @State phoneNumber: string = ''; // 手机号
   @State password: string = ''; // 密码
   @State nickName: string = ''; // 昵称
-  @State isPasswordVisible: boolean = false;  // 密码是否可见
+  @State isPasswordVisible: boolean = false; // 密码是否可见
   @State phoneError: string = ''; // 手机错误提示
   @State passwordError: string = ''; // 密码错误提示
   @State nickNameError: string = ''; // 昵称错误提示
@@ -19,13 +19,17 @@ struct LoginPage {
   @State isPasswordValid: boolean = true; // 密码是否通过验证
   @State isNickNameValid: boolean = true; // 昵称是否通过验证
   @State hasValidated: boolean = false; // 是否需要验证表单
-
-  phoneErrMsg:string = "请输入正确的 11 位手机号";
-  passwordErrMsg:string = "密码需含字母、数字、符号三种且长度大于 6 位";
-  nickNameErrMsg:string = "昵称至少有两个字符，不可以有空格";
+  phoneErrMsg: string = "请输入正确的 11 位手机号";
+  passwordErrMsg: string = "密码需含字母、数字、符号三种且长度大于 6 位";
+  nickNameErrMsg: string = "昵称至少有两个字符，不可以有空白字符";
 
   // 点击登录：触发校验
   private onLogin(): void {
+    console.log(`登录：：
+    手机号码 = ${this.phoneNumber}
+    密码 = ${this.password}
+    昵称 = ${this.nickName}`)
+
     this.hasValidated = true; // 需要表单验证  -- 给输入框的onChange使用的
 
     // 点击登录按钮再验证一次
@@ -42,7 +46,8 @@ struct LoginPage {
         message: '校验通过，执行登录请求',
         confirm: {
           value: '确定',
-          action: () => {}
+          action: () => {
+          }
         }
       });
     }
@@ -50,15 +55,20 @@ struct LoginPage {
 
   // 点击模态框注册按钮: 触发校验
   private onRegister(): void {
+    console.log(`注册：：
+    手机号码 = ${this.phoneNumber}
+    密码 = ${this.password}
+    昵称 = ${this.nickName}`)
+
     this.hasValidated = true; // 需要表单验证  -- 给输入框的onChange使用的
 
-    // 点击登录按钮再验证一次
+    // 点击注册按钮验证一次
     this.isPhoneValid = validatePhone(this.phoneNumber);
     this.isPasswordValid = validatePassword(this.password);
     this.isNickNameValid = validateNickName(this.nickName);
     this.phoneError = this.isPhoneValid ? '' : this.phoneErrMsg;
     this.passwordError = this.isPasswordValid ? '' : this.passwordErrMsg;
-    this.passwordError = this.isNickNameValid ? '' : this.nickNameErrMsg;
+    this.nickNameError = this.isNickNameValid ? '' : this.nickNameErrMsg;
 
     // 如果手机号、密码和昵称验证通过
     if (this.isPhoneValid && this.isPasswordValid && this.isNickNameValid) {
@@ -68,7 +78,8 @@ struct LoginPage {
         message: '校验通过，执行注册请求',
         confirm: {
           value: '确定',
-          action: () => {}
+          action: () => {
+          }
         }
       });
     }
@@ -127,8 +138,13 @@ struct LoginPage {
     }
     .width('100%')
     .alignItems(VerticalAlign.Center)
-    .padding({ left: 20, right: 20, top: 16, bottom: 16 })
-    .margin({bottom: 60});
+    .padding({
+      left: 20,
+      right: 20,
+      top: 16,
+      bottom: 16
+    })
+    .margin({ bottom: 60 });
   }
 
   // 欢迎标题
@@ -146,8 +162,13 @@ struct LoginPage {
     }
     .alignItems(HorizontalAlign.Start)
     .width('100%')
-    .padding({ left: 20, right: 20, top: 32, bottom: 32 })
-    .margin({bottom: 30});
+    .padding({
+      left: 20,
+      right: 20,
+      top: 32,
+      bottom: 32
+    })
+    .margin({ bottom: 30 });
   }
 
   // 表单区域
@@ -158,6 +179,7 @@ struct LoginPage {
       this.InputField({
         label: '手机号',
         placeholder: '手机号',
+        text: this.phoneNumber,
         type: InputType.PhoneNumber,
         isValid: this.isPhoneValid,
         error: this.phoneError,
@@ -174,6 +196,7 @@ struct LoginPage {
       this.InputField({
         label: '密码',
         placeholder: '密码',
+        text: this.password,
         type: InputType.Password,
         isValid: this.isPasswordValid,
         error: this.passwordError,
@@ -204,7 +227,7 @@ struct LoginPage {
     .padding({ left: 20, right: 20 });
   }
 
-  // 可复用输入框构建函数（手机号 / 密码通用）
+  // 可复用输入框构建函数（手机号 / 密码 / 昵称 通用）
   @Builder
   InputField(params: input_field_t) {
     Column() {
@@ -215,10 +238,10 @@ struct LoginPage {
           .fontSize(16)
           .fontColor('#333333')
           .width(56)
-          .margin({right:40});
+          .margin({ right: 40 });
 
         // 输入框（无边框）
-        TextInput({ placeholder: params.placeholder })
+        TextInput({ placeholder: params.placeholder, text: params.text })
           .layoutWeight(1)
           .height(48)
           .type(params.type)
@@ -263,13 +286,13 @@ struct LoginPage {
         .fontSize(16)
         .fontWeight(FontWeight.Medium)
         .borderRadius(24)
-        .margin({bottom: 50})
+        .margin({ bottom: 50 })
         .onClick(() => {
           this.onLogin();
         });
 
       // 注册按钮（次按钮）
-      Button('注册')
+      Button('外面注册按钮')
         .width('100%')
         .height(48)
         .backgroundColor('#FFFFFF')
@@ -279,10 +302,37 @@ struct LoginPage {
         .borderRadius(24)
         .border({ width: 1, color: '#E5E5E5' })
         .margin({ top: 12 })
+        .onClick(() => {
+          // 初始化变量  --  避免外面的表单验证结果 传递到 半模态页面
+          this.hasValidated = false;
+          this.phoneError = "";
+          this.passwordError = "";
+
+          // 输入框输入的数据 也要初始化 （避免后续 输入框显示空值，但实际有值）
+          this.password = "";
+
+          // 显示半模态页面
+          this.isShowSheet = true;
+        })
         // .绑定半模态页面(是否显示， 自定义构建函数,  其他配置)
-        .bindSheet(true, this.SheetBuilder(), {
+        .bindSheet($$this.isShowSheet, this.SheetBuilder(), {
           showClose: false,
-          height: "65%"
+          height: "65%",
+          // 二次确认监听
+          onWillDismiss: (sheetAction: DismissSheetAction)=>{
+            // 数据初始化 -- 避免半模态页面的表单验证结果 传递到 外面
+            this.hasValidated = false;
+            this.phoneError = "";
+            this.passwordError = "";
+            this.nickNameError = "";
+
+            // 输入框输入的数据 也要初始化 （避免后续 输入框显示空值，但实际有值）
+            this.password = "";
+            this.nickName = "";
+
+            // sheetAction.reason // 获取关闭模态框的方式
+            sheetAction.dismiss(); // 关闭模态框
+          }
         })
 
     }
@@ -292,90 +342,112 @@ struct LoginPage {
 
   // 半模态转场
   @Builder
-  SheetBuilder(){
-     Column(){
+  SheetBuilder() {
+    Column() {
 
-       // 顶部标题
-       Row(){
-         Text("注册").fontSize(30)
-         Text("X").fontSize(20).fontColor($r("app.color.unselected_font_color"))
-       }
-       .width("100%")
-       .margin({bottom:30})
-       .justifyContent(FlexAlign.SpaceBetween)
+      // 顶部标题
+      Row() {
+        Text("注册").fontSize(30)
+        Text("X")
+          .fontSize(20)
+          .fontColor($r("app.color.unselected_font_color"))
+          .onClick(()=>{
+            // 数据初始化 -- 避免半模态页面的表单验证结果 传递到 外面
+            this.hasValidated = false;
+            this.phoneError = "";
+            this.passwordError = "";
+            this.nickNameError = "";
 
-
-       // 中间表单
-       Column(){
-         // 手机号码输入框
-         this.InputField({
-           label: "手机号",
-           placeholder: "手机号",
-           type: InputType.PhoneNumber,
-           isValid: this.isPhoneValid,
-           error: this.phoneError,
-           onChange: (value: string) => {
-             this.phoneNumber = value;
-             if (this.hasValidated) {
-               this.isPhoneValid = validatePhone(value);
-               this.phoneError = this.isPhoneValid ? '' : '请输入正确的 11 位手机号';
-             }
-           }
-         })
-         // 密码输入框（复用自定义构建函数，带显隐切换）
-         this.InputField({
-           label: '密码',
-           placeholder: '密码',
-           type: InputType.Password,
-           isValid: this.isPasswordValid,
-           error: this.passwordError,
-           onChange: (value: string) => {
-             this.password = value;
-             if (this.hasValidated) {
-               this.isPasswordValid = validatePassword(value);
-               this.passwordError = this.isPasswordValid ? '' : this.passwordErrMsg;
-             }
-           }
-
-         });
-         // 昵称输入框
-         this.InputField({
-           label: "昵称",
-           placeholder: "请输入昵称",
-           type: InputType.Normal,
-           isValid: this.isNickNameValid,
-           error: this.nickNameError,
-           onChange: (value:string) =>{
-              // 昵称输入框的值，赋予状态变量
-                this.nickName = value;
-                // 如果点击注册以后， 验证不通过， 每一次输入都会进行昵称验证
-                if(this.hasValidated){
-                   this.isNickNameValid = validateNickName(value);
-                   this.nickNameError = this.isNickNameValid ? "" : this.nickNameErrMsg
-                }
-           }
-         })
-
-       }
-       .padding({ left:15, right:15, top:20, bottom:50 })
+            // 输入框输入的数据 也要初始化 （避免后续 输入框显示空值，但实际有值）
+            this.password = "";
+            this.nickName = "";
 
 
-       // 底部注册按钮
-       Button('注册')
-         .width('100%')
-         .height(48)
-         .backgroundColor('#0052D9')
-         .fontColor('#FFFFFF')
-         .fontSize(16)
-         .fontWeight(FontWeight.Medium)
-         .borderRadius(24)
-         .margin({bottom: 50})
-         .onClick(() => {
-           // TODO... 真正的注册函数
-           this.onRegister();
-         });
+            //关闭半模态页面
+            this.isShowSheet = false;
+          })
+      }
+      .width("100%")
+      .margin({ bottom: 40 })
+      .justifyContent(FlexAlign.SpaceBetween)
 
 
-     }.padding(20)
+      // 中间表单
+      Column() {
+        // 手机号码输入框
+        this.InputField({
+          label: "手机号",
+          placeholder: "手机号",
+          text: this.phoneNumber,
+          type: InputType.PhoneNumber,
+          isValid: this.isPhoneValid,
+          error: this.phoneError,
+          onChange: (value: string) => {
+            this.phoneNumber = value;
+            if (this.hasValidated) {
+              this.isPhoneValid = validatePhone(value);
+              this.phoneError = this.isPhoneValid ? '' : '请输入正确的 11 位手机号';
+            }
+          }
+        })
+        // 密码输入框（复用自定义构建函数，带显隐切换）
+        this.InputField({
+          label: '密码',
+          placeholder: '密码',
+          type: InputType.Password,
+          isValid: this.isPasswordValid,
+          error: this.passwordError,
+          onChange: (value: string) => {
+            this.password = value;
+            if (this.hasValidated) {
+              this.isPasswordValid = validatePassword(value);
+              this.passwordError = this.isPasswordValid ? '' : this.passwordErrMsg;
+            }
+          }
+
+        });
+        // 昵称输入框
+        this.InputField({
+          label: "昵称",
+          placeholder: "请输入昵称",
+          type: InputType.Normal,
+          isValid: this.isNickNameValid,
+          error: this.nickNameError,
+          onChange: (value: string) => {
+            // 昵称输入框的值，赋予状态变量
+            this.nickName = value;
+            // 如果点击注册以后， 验证不通过， 每一次输入都会进行昵称验证
+            if (this.hasValidated) {
+              this.isNickNameValid = validateNickName(value);
+              this.nickNameError = this.isNickNameValid ? "" : this.nickNameErrMsg
+            }
+          }
+        })
+
+      }
+      .padding({
+        left: 15,
+        right: 15,
+        bottom: 35
+      })
+
+
+      // 底部注册按钮
+      Button('注册')
+        .width('100%')
+        .height(48)
+        .backgroundColor('#0052D9')
+        .fontColor('#FFFFFF')
+        .fontSize(16)
+        .fontWeight(FontWeight.Medium)
+        .borderRadius(24)
+        .margin({ bottom: 10 })
+        .onClick(() => {
+          // TODO... 真正的注册函数
+          this.onRegister();
+        });
+
+
+    }.padding(20)
   }
 }
