@@ -1,7 +1,6 @@
 // 输入框 自定义构建函数 所需要接收的参数类型
 export interface input_field_t {
   label: string,  // 左侧的描述文本
-  text?: string, // 输入框的值
   placeholder: string, // 右侧输入框的占位符
   text?: string,  // 输入框的值， 用来做手机号存储
   type: InputType, // 输入框的类型
