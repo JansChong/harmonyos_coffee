@@ -9,6 +9,7 @@ const BASEURL:string = "https://kf.webxyq.com";
 // 请求 appkey
 const APPKEY:string = "U2FsdGVkX19WSQ59Cg+Fj9jNZPxRC5y0xB1iV06BeNA=";
 
+
 /**
  * 手动将对象转换为 URL 查询字符串
  * @param obj 待转换的对象

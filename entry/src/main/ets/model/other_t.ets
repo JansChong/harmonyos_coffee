@@ -13,5 +13,5 @@ export interface input_field_t {
 export interface RegistrationInfo {
   phone: string,
   password: string,
-  nickName:string
+  nickName?:string
 }

@@ -51,6 +51,17 @@ let registerAccount = (registrationInfo: RegistrationInfo): Promise<http.HttpRes
    return ajax("/register", "POST", registrationInfo)
 }
 
+/**
+ * 登录账号
+ * @param loginInfo 登录信息
+ * @param loginInfo.phone 手机号码
+ * @param loginInfo.password 密码
+ * @returns Promise<http.HttpResponse>
+ */
+let loginAccount = (loginInfo: RegistrationInfo): Promise<http.HttpResponse> =>{
+  return ajax("/login", "POST", loginInfo)
+}
+
 // 导出数据接口
 export {
   fetchBanner  // 拉取轮播图的接口
@@ -58,4 +69,5 @@ export {
   ,fetchProductType // 拉取商品分类
   ,fetchProductListByType // 通过分类拉取商品列表
   ,registerAccount // 注册接口
+  ,loginAccount // 登录接口
 }

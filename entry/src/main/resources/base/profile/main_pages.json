@@ -3,6 +3,7 @@
     "pages/Index",
     "pages/LoginPage",
     "pages/DetailPage",
-    "pages/SearchPage"
+    "pages/SearchPage",
+    "pages/PersistenceV2Test"
   ]
 }

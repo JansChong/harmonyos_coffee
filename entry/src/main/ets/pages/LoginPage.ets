@@ -1,40 +1,46 @@
 // 导入参数类型约束
 import { input_field_t, RegistrationInfo } from "../model/other_t"
 
-// 弹窗
-import { promptAction } from '@kit.ArkUI';
-
 // 导入注册接口
-import { registerAccount } from "../api/api";
+import { loginAccount, registerAccount } from "../api/api";
 
 import { validateNickName, validatePassword, validatePhone } from "../utils/validForm";
 
+// 数据持久化
+import { PersistenceV2, Type, ConnectOptions,  promptAction, router } from '@kit.ArkUI';
+
+// 要存储的数据
+@ObservedV2
+export class UserLoginToken {
+  @Trace public token: string = "";
+}
+
+
 @Entry
-@Component
+@ComponentV2
 struct LoginPage {
-  @State isShowSheet: boolean = false; // 是否显示半模态框
-  @State phoneNumber: string = ''; // 手机号
-  @State password: string = ''; // 密码
-  @State nickName: string = ''; // 昵称
-  @State isPasswordVisible: boolean = false; // 密码是否可见
-  @State phoneError: string = ''; // 手机错误提示
-  @State passwordError: string = ''; // 密码错误提示
-  @State nickNameError: string = ''; // 昵称错误提示
-  @State isPhoneValid: boolean = true; // 手机号是否通过验证
-  @State isPasswordValid: boolean = true; // 密码是否通过验证
-  @State isNickNameValid: boolean = true; // 昵称是否通过验证
-  @State hasValidated: boolean = false; // 是否需要验证表单
+  // key不传入尝试用为type的name作为key，加密参数不传入默认加密等级为EL2
+  @Local p: UserLoginToken =
+    PersistenceV2.globalConnect({ type: UserLoginToken, defaultCreator: () => new UserLoginToken() })!;
+
+  @Local isShowSheet: boolean = false; // 是否显示半模态框
+  @Local phoneNumber: string = ''; // 手机号
+  @Local password: string = ''; // 密码
+  @Local nickName: string = ''; // 昵称
+  @Local isPasswordVisible: boolean = false; // 密码是否可见
+  @Local phoneError: string = ''; // 手机错误提示
+  @Local passwordError: string = ''; // 密码错误提示
+  @Local nickNameError: string = ''; // 昵称错误提示
+  @Local isPhoneValid: boolean = true; // 手机号是否通过验证
+  @Local isPasswordValid: boolean = true; // 密码是否通过验证
+  @Local isNickNameValid: boolean = true; // 昵称是否通过验证
+  @Local hasValidated: boolean = false; // 是否需要验证表单
   phoneErrMsg: string = "请输入正确的 11 位手机号";
   passwordErrMsg: string = "密码需含字母、数字、符号三种且长度大于 6 位";
   nickNameErrMsg: string = "昵称至少有两个字符，不可以有空白字符";
 
   // 点击登录：触发校验
   private onLogin(): void {
-    console.log(`登录：：
-    手机号码 = ${this.phoneNumber}
-    密码 = ${this.password}
-    昵称 = ${this.nickName}`)
-
     this.hasValidated = true; // 需要表单验证  -- 给输入框的onChange使用的
 
     // 点击登录按钮再验证一次
@@ -45,16 +51,32 @@ struct LoginPage {
 
     // 如果手机号和密码验证通过
     if (this.isPhoneValid && this.isPasswordValid) {
-      // 显示Dialog
-      AlertDialog.show({
-        title: '登录',
-        message: '校验通过，执行登录请求',
-        confirm: {
-          value: '确定',
-          action: () => {
+      // 构建登录信息
+      let login:RegistrationInfo = {
+        phone: this.phoneNumber,
+        password: this.password
+      }
+      // 调用登录接口
+      loginAccount(login)
+        .then(res=>{
+           console.log("登录状态 =>", JSON.stringify(res.result));
+           // 不管成功还是失败
+           promptAction.openToast({
+             message: Object(res.result).msg
+           })
+           // 如果登录成功， 跳转到首页
+          if(Object(res.result).code == 200){
+             // 登录状态(TOKEN) 持久化存储
+            this.p.token = Object(res.result).token;
+
+             // 页面跳转
+             router.pushUrl({
+               url: "pages/Index",
+               // params: object 给要跳转页面携带的参数
+               // recoverable: booealn 页面是否可恢复
+             })
           }
-        }
-      });
+        })
     }
   }
 
@@ -163,7 +185,12 @@ struct LoginPage {
         .fontSize(14)
         .fontColor($r("app.color.theme_color"))
         .onClick(() => {
-          // 返回首页
+          // 页面跳转
+          router.pushUrl({
+            url: "pages/Index",
+            // params: object 给要跳转页面携带的参数
+            // recoverable: booealn 页面是否可恢复
+          })
         });
     }
     .width('100%')
