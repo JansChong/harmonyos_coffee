@@ -138,12 +138,10 @@ struct DetailPage {
 
           }
         }
+        // 状态变量只会处理 第一层属性变化， 第二层以上不会驱动视图更新
+        let obj = JSON.stringify(this.rule_opt);
+        this.rule_opt = JSON.parse(obj);
         console.log("规格对象",JSON.stringify(this.rule_opt))
-
-
-
-
-
       }
     } catch (e) {
       promptAction.showToast({ message: '商品详情加载失败' });
@@ -223,25 +221,20 @@ struct DetailPage {
           // 商品信息
           this.ProductInfo();
 
-          // 温度选项（子组件调用，@Prop 自动同步 selectedTemp）
-          OptionGroup({
-            label: '温度',
-            options: [],
-            selected: "this.selectedTemp",
-            onSelect: (v: string) => {
-              // "this.selectedTemp" = v;
-            }
-          });
+          // 商品规格
+          ForEach(Object.keys(Object(this.rule_opt)), (item:string)=>{
+            OptionGroup({
+              label: Object(this.rule_opt)[item].desc,
+              options: Object(this.rule_opt)[item].arr,
+              selected: Object(this.rule_opt)[item].arr[Object(this.rule_opt)[item].select_idx],
+              onSelect: (idx: number) => {
+                Object(this.rule_opt)[item].select_idx = idx;
+                let obj = JSON.stringify(this.rule_opt);
+                this.rule_opt = JSON.parse(obj);
+              }
+            });
+          })
 
-          // 糖度选项（子组件调用，@Prop 自动同步 selectedSugar）
-          OptionGroup({
-            label: '糖度',
-            options: [],
-            selected: "this.selectedSugar",
-            onSelect: (v: string) => {
-              // this.selectedSugar = v;
-            }
-          });
 
           // 数量选择
           this.QuantitySelector();
@@ -496,7 +489,7 @@ struct OptionGroup {
   @Prop label: string;
   @Prop options: string[];
   @Prop selected: string;
-  onSelect: (v: string) => void = () => {
+  onSelect: (v: number) => void = () => {
   };
 
   build() {
@@ -507,7 +500,7 @@ struct OptionGroup {
         .width(56);
 
       Row() {
-        ForEach(this.options, (opt: string) => {
+        ForEach(this.options, (opt: string, idx:number) => {
           Text(opt)
             .fontSize(13)
             .fontColor(opt === this.selected ? '#FFFFFF' : '#666666')
@@ -521,9 +514,9 @@ struct OptionGroup {
             })
             .margin({ right: 8 })
             .onClick(() => {
-              this.onSelect(opt);
+              this.onSelect(idx);
             });
-        }, (opt: string) => opt); // 用选项值作 key 即可，@Prop 变化已能触发重渲染
+        }); // 用选项值作 key 即可，@Prop 变化已能触发重渲染
       }
       .layoutWeight(1);
     }
